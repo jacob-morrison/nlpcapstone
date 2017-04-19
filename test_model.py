@@ -3,16 +3,23 @@
 import tensorflow as tf
 import numpy as np
 import data_helpers
+import sys
 
-learning_rate = 0.01
-training_iters = 200000
+if sys.argv[1] == 'PDTB':
+	learning_rate = 0.01
+	training_iters = 200000
+	n_classes = 16 # 15 total senses
+elif sys.argv[1] == 'SICK':
+	learning_rate = 0.01
+	training_iters = 200000
+	n_classes = 3 # 15 total senses
+
 batch_size = 64
 display_step = 10
 
 # network parameters
 n_input = 75 # truncate sentences (pad sentences with <PAD> tokens if less than this, cut off if larger)
 sen_dim = 300
-n_classes = 16 # 15 total senses
 
 # tf graph input
 x1 = tf.placeholder(tf.float32, [None, sen_dim, n_input])
@@ -21,7 +28,7 @@ y = tf.placeholder(tf.float32, [None, n_classes])
 
 # Store layers weight & bias
 weights = {
-	'w': tf.constant(1.0/75, dtype=tf.float32, shape=[n_input,1]),
+	'w': tf.constant(1.0/n_input, dtype=tf.float32, shape=[n_input,1]),
 	#'w': tf.Variable(tf.random_normal([n_input,1], mean=1.0/75, stddev=1/300, dtype=tf.float32)),
 	'out': tf.Variable(tf.random_normal([sen_dim*2, n_classes],dtype=tf.float32))
 }
@@ -35,8 +42,8 @@ x12 = tf.reshape(x1, [-1, n_input])
 x22 = tf.reshape(x2, [-1, n_input])                                                                                                                                                 
 x12 = tf.matmul(x12, weights['w'])                                                                                                                                            
 x22 = tf.matmul(x22, weights['w'])
-x12 = tf.reshape(x12, [-1, 300])
-x22 = tf.reshape(x22, [-1, 300])
+x12 = tf.reshape(x12, [-1, sen_dim])
+x22 = tf.reshape(x22, [-1, sen_dim])
 x12 = tf.tanh(x12)
 x22 = tf.tanh(x22)
 pred = tf.concat(1, [x12, x22])
@@ -64,7 +71,10 @@ with tf.Session() as sess:
 	sess.run(init)
 	step = 1
 	model = data_helpers.load_model('./Data/GoogleNews-vectors-negative300.bin')
-	sentences1, sentences2, labels = data_helpers.load_labels_and_data_PDTB(model, './Data/PDTB_implicit/train.txt')
+	if sys.argv[1] == 'PDTB':
+		sentences1, sentences2, labels = data_helpers.load_labels_and_data_PDTB(model, './Data/PDTB_implicit/train.txt')
+	elif sys.argv[1] == 'SICK':
+		sentences1, sentences2, labels = data_helpers.load_data_SICK(model, './Data/SICK/train.txt')
 	total = 0
 
 	while total < training_iters:
@@ -109,15 +119,21 @@ with tf.Session() as sess:
 
 	# test accuracy on dev set
 	print("accuracy on dev set:")
-	sentences12, sentences22, labels2 = data_helpers.load_labels_and_data_PDTB(\
-		model, \
-		'./Data/PDTB_implicit/dev.txt')                          
+	if sys.argv[1] == 'PDTB':
+		sentences12, sentences22, labels2 = data_helpers.load_labels_and_data_PDTB(\
+			model, \
+			'./Data/PDTB_implicit/dev.txt')
+	elif sys.argv[1] == 'SICK':
+		sentences12, sentences22, labels2 = data_helpers.load_data_SICK(\
+			model, \
+			'./Data/SICK/dev.txt')
 	print(str(sess.run(accuracy, feed_dict={x1: sentences12, x2: sentences22, y: labels2})))
 
+'''
 	# test accuracy on dev set
 	print("accuracy on test set:")
 	sentences12, sentences22, labels2 = data_helpers.load_labels_and_data_PDTB(\
 		model, \
 		'./Data/PDTB_implicit/test.txt')                          
 	print(str(sess.run(accuracy, feed_dict={x1: sentences12, x2: sentences22, y: labels2})))
-
+'''

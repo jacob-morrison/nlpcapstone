@@ -3,16 +3,26 @@
 import tensorflow as tf
 import numpy as np
 import data_helpers
+import sys
 
-learning_rate = 0.01
-training_iters = 1000000
+test = sys.argv[1]
+
+if test == 'PDTB':
+	learning_rate = 0.01
+	training_iters = 1000000
+	n_classes = 16 # 16 total senses
+
+elif test == 'SICK':
+	learning_rate = 0.01
+	training_iters = 1000000
+	n_classes = 3
+
 batch_size = 64
 display_step = 10
 
 # network parameters
 n_input = 75 # truncate sentences (pad sentences with <PAD> tokens if less than this, cut off if larger)
 sen_dim = 300
-n_classes = 16 # 15 total senses
 
 # tf graph input
 x1 = tf.placeholder(tf.float32, [None, sen_dim, n_input])
@@ -69,7 +79,10 @@ with tf.Session() as sess:
 	sess.run(init)
 	step = 1
 	model = data_helpers.load_model('./Data/GoogleNews-vectors-negative300.bin')
-	sentences1, sentences2, labels = data_helpers.load_labels_and_data_PDTB(model, './Data/PDTB_implicit/train.txt')
+	if test == 'PDTB':
+		sentences1, sentences2, labels = data_helpers.load_labels_and_data_PDTB(model, './Data/PDTB_implicit/train.txt')
+	elif test == 'SICK':
+		sentences1, sentences2, labels = data_helpers.load_data_SICK(model, './Data/SICK/train.txt')
 	total = 0
 
 	while total < training_iters:
@@ -114,8 +127,13 @@ with tf.Session() as sess:
 
 	# test accuracy on dev set
 	print("accuracy on dev set:")
-	sentences12, sentences22, labels2 = data_helpers.load_labels_and_data_PDTB(\
-		model, \
-		'./Data/PDTB_implicit/dev.txt')                          
+	if test == 'PDTB':
+		sentences12, sentences22, labels2 = data_helpers.load_labels_and_data_PDTB(\
+			model, \
+			'./Data/PDTB_implicit/dev.txt')
+	elif test == 'SICK':
+		sentences12, sentences22, labels2 = data_helpers.load_data_SICK(\
+			model, \
+			'./Data/SICK/dev.txt')
 	print(str(sess.run(accuracy, feed_dict={x1: sentences12, x2: sentences22, y: labels2})))
 
