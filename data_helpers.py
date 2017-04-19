@@ -56,7 +56,7 @@ def load_labels_and_sentences(data_file):
 		print("Accuracy if we did nothing: " + str(float(mx)/total))
 	return sentences1, sentences2, ret_labels
 
-def load_data_SICK(model, data_file, pad_sentences=True, return_lengths=False):
+def load_data_SICK(model, data_file, smallSentences=False, pad_sentences=True, return_lengths=False):
 	labels = {}
 	labels['NEUTRAL'] = 0
 	labels['ENTAILMENT'] = 1
@@ -67,21 +67,35 @@ def load_data_SICK(model, data_file, pad_sentences=True, return_lengths=False):
 	sentences2 = []
 	lengths1 = []
 	lengths2 = []
+	i = 0
 	with open(data_file) as f:
 		for line in f:
-			tokens = line.split('\t')
-			lab_vec = np.zeros(3)
-			lab_vec[labels[tokens[4]]] = 1
-			sen1 = tokens[1].split()
-			sen2 = tokens[2].split()
-			lengths1.append(len(sen1))
-			lengths2.append(len(sen2))
-			if pad_sentences:
-				sen1 = pad_or_cut(sen1)
-				sen2 = pad_or_cut(sen2)
-			ret_labels.append(lab_vec)
-			sentences1.append(sen1)
-			sentences2.append(sen2)
+			if i == 0:
+				i += 1
+			else:
+				tokens = line.strip().split('\t')
+				lab_vec = np.zeros(3)
+				lab_vec[labels[tokens[4]]] = 1
+				sen1 = tokens[1].split()
+				sen2 = tokens[2].split()
+				lengths1.append(len(sen1))
+				lengths2.append(len(sen2))
+				if pad_sentences:
+					sen1 = pad_or_cut(sen1)
+					sen2 = pad_or_cut(sen2)
+				ret_labels.append(lab_vec)
+				sentences1.append(get_sentence_matrix(sen1, model)[0])
+				sentences2.append(get_sentence_matrix(sen2, model)[0])
+	total = len(ret_labels)
+	ls = Counter()
+	for l in ret_labels:
+		idx = np.argmax(l)
+		ls[idx] += 1
+	mx = 0
+	for i in range(3):
+		if ls[i] > mx:
+			mx = ls[i]
+	print("Accuracy if we did nothing: " + str(float(mx)/total))
 	if return_lengths:
 		return sentences1, sentences2, ret_labels, lengths1, lengths2
 	else:
