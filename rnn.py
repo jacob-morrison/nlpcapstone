@@ -12,13 +12,13 @@ import sys
 test = sys.argv[1]
 
 if test == 'PDTB':
-    learning_rate = 0.0001
-    training_iters = 500000
+    learning_rate = 0.001
+    training_iters = 100000
     n_classes = 16 # 15 total senses
 
 elif test == 'SICK':
-    learning_rate = 0.0001
-    training_iters = 500000
+    learning_rate = 0.001
+    training_iters = 100000
     n_classes = 3 # 15 total senses
 
 # parameters
