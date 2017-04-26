@@ -11,7 +11,7 @@ if sys.argv[1] == 'PDTB':
 	n_classes = 16 # 15 total senses
 elif sys.argv[1] == 'SICK':
 	learning_rate = 0.01
-	training_iters = 200000
+	training_iters = 1900000
 	n_classes = 3 # 15 total senses
 
 batch_size = 64
